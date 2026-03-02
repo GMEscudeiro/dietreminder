@@ -1,6 +1,6 @@
 # dietreminder
 DietReminder é um programa de auxilio pra contagem de calorias e fixação da dieta.  
-Com um sistema de registro de refeições, contagem de macros e notificações para lembrar do momento das refeições.
+Com um sistema de registro de refeições, contagem de macronutrientes e notificações para lembrar do momento das refeições.
 
 ## Membros do grupo
 - Lucas Tonoli Cabral Duarte (PO)
