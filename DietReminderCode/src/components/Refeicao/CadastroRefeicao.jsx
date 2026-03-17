@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Plus, Save, X, Clock, Type, List } from 'lucide-react';
+import { Search, Plus, Save, X, Clock, Type, List, ArrowLeft } from 'lucide-react';
 import { FoodList } from './FoodList';
 
 const dietasMock = [
@@ -64,7 +64,7 @@ function FormSelect({ label, icon: Icon, options, containerClassName = '', ...pr
   );
 }
 
-export function CadastroRefeicao() {
+export function CadastroRefeicao({ onVoltar }) {
   const [alimentosAdicionados, setAlimentosAdicionados] = useState([]);
   const [nomeRefeicao, setNomeRefeicao] = useState('');
   const [horarioRefeicao, setHorarioRefeicao] = useState('');
@@ -84,6 +84,13 @@ export function CadastroRefeicao() {
   return (
     <div className="w-full max-w-xl mx-auto p-6 sm:p-8 bg-white dark:bg-zinc-950 rounded-2xl sm:border border-zinc-200 dark:border-zinc-800 sm:shadow-sm">
       <div className="mb-8">
+        <button
+          type="button"
+          onClick={onVoltar}
+          className="flex items-center gap-1.5 text-sm text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors mb-6">
+          <ArrowLeft size={16} strokeWidth={1.5} />
+          Voltar
+        </button>
         <h2 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50 tracking-tight">
           Cadastrar Refeição
         </h2>
