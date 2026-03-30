@@ -64,12 +64,14 @@ function FormSelect({ label, icon: Icon, options, containerClassName = '', ...pr
   );
 }
 
-export function CadastroRefeicao({ onVoltar }) {
-  const [alimentosAdicionados, setAlimentosAdicionados] = useState([]);
-  const [nomeRefeicao, setNomeRefeicao] = useState('');
-  const [horarioRefeicao, setHorarioRefeicao] = useState('');
-  const [dietaSelecionada, setDietaSelecionada] = useState('');
+export function CadastroRefeicao({ onVoltar, refeicaoParaEditar }) {
+  const [alimentosAdicionados, setAlimentosAdicionados] = useState(refeicaoParaEditar?.alimentos || []);
+  const [nomeRefeicao, setNomeRefeicao] = useState(refeicaoParaEditar?.nome || '');
+  const [horarioRefeicao, setHorarioRefeicao] = useState(refeicaoParaEditar?.horario || '');
+  const [dietaSelecionada, setDietaSelecionada] = useState(refeicaoParaEditar?.dietaId || '');
   const [termoBusca, setTermoBusca] = useState('');
+
+  const isEditing = !!refeicaoParaEditar;
 
   const lidarComRemocaoAlimento = (id) => {
     setAlimentosAdicionados(alimentosAdicionados.filter(alimento => alimento.id !== id));
@@ -92,10 +94,12 @@ export function CadastroRefeicao({ onVoltar }) {
           Voltar
         </button>
         <h2 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50 tracking-tight">
-          Cadastrar Refeição
+          {isEditing ? 'Editar Refeição' : 'Cadastrar Refeição'}
         </h2>
         <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-          Preencha os detalhes e adicione os alimentos da sua refeição.
+          {isEditing 
+            ? 'Altere os detalhes necessários da sua refeição.' 
+            : 'Preencha os detalhes e adicione os alimentos da sua refeição.'}
         </p>
       </div>
 
@@ -186,6 +190,7 @@ export function CadastroRefeicao({ onVoltar }) {
         <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800/50 flex flex-col-reverse sm:flex-row justify-end gap-3 mt-4">
           <button
             type="button"
+            onClick={onVoltar}
             className="px-5 py-2.5 rounded-xl text-sm font-medium border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors flex items-center justify-center gap-2"
           >
             <X size={16} strokeWidth={1.5} />
@@ -196,11 +201,10 @@ export function CadastroRefeicao({ onVoltar }) {
             className="px-5 py-2.5 rounded-xl text-sm font-medium bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-900 transition-colors flex items-center justify-center gap-2 shadow-sm"
           >
             <Save size={16} strokeWidth={1.5} />
-            Salvar Refeição
+            {isEditing ? 'Salvar Alterações' : 'Salvar Refeição'}
           </button>
         </div>
       </form>
     </div>
   );
 }
-
