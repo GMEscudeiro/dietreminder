@@ -413,7 +413,7 @@ function RefeicaoCard({ refeicao, onEditar }) {
               <div className="mt-4 flex justify-end">
                 <button
                   type="button"
-                  onClick={onEditar}
+                  onClick={() => onEditar(refeicao)}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:border-zinc-400 dark:hover:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all"
                 >
                   <Pencil size={13} strokeWidth={1.5} />
