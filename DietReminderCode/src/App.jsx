@@ -8,9 +8,25 @@ import { CadastroRefeicao } from './components/Refeicao/CadastroRefeicao';
 import { ListaRefeicoes } from './components/Refeicao/ListaRefeicoes';
 
 function App() {
-  const [mode, setMode] = useState('login'); // 'login' | 'register' | 'cadastro_refeicao'
+  const [mode, setMode] = useState('login'); // 'login' | 'register' | 'lista_refeicoes' | 'cadastro_refeicao'
   const { theme, toggleTheme } = useTheme();
   const [drawerAberto, setDrawerAberto] = useState(false);
+  const [refeicaoSendoEditada, setRefeicaoSendoEditada] = useState(null);
+
+  const handleNovaRefeicao = () => {
+    setRefeicaoSendoEditada(null);
+    setMode('cadastro_refeicao');
+  };
+
+  const handleEditarRefeicao = (refeicao) => {
+    setRefeicaoSendoEditada(refeicao);
+    setMode('cadastro_refeicao');
+  };
+
+  const handleVoltar = () => {
+    setRefeicaoSendoEditada(null);
+    setMode('lista_refeicoes');
+  };
 
   return (
     <div className="relative min-h-screen bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300 flex flex-col w-full selection:bg-zinc-900 selection:text-white dark:selection:bg-white dark:selection:text-zinc-900">
@@ -83,8 +99,8 @@ function App() {
               className="w-full max-w-xl"
             >
               <ListaRefeicoes
-                onNovaRefeicao={() => setMode('cadastro_refeicao')}
-                onEditar={() => setMode('login')}
+                onNovaRefeicao={handleNovaRefeicao}
+                onEditar={handleEditarRefeicao}
                 drawerAberto={drawerAberto}
                 onAbrirDrawer={() => setDrawerAberto(true)}
                 onFecharDrawer={() => setDrawerAberto(false)}
@@ -101,7 +117,10 @@ function App() {
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               className="w-full max-w-xl"
             >
-              <CadastroRefeicao onVoltar={() => setMode('lista_refeicoes')} />
+              <CadastroRefeicao 
+                onVoltar={handleVoltar} 
+                refeicaoParaEditar={refeicaoSendoEditada}
+              />
             </motion.div>
           )}
         </AnimatePresence>
