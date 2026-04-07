@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
+import { SyncManager } from '../../services/syncManager';
 
 // ─── MacroBar ─────────────────────────────────────────────────────────────────
 
@@ -191,23 +192,42 @@ function RefeicaoCard({ refeicao, onEditar, onToggleConcluida }) {
     });
   };
 
+  const handleCheck = (e) => {
+    e.stopPropagation();
+
+    if (!concluida && refeicao.horario) {
+      const refeicaoDate = new Date(refeicao.horario);
+
+      const dataRefeicaoHoje = new Date();
+      dataRefeicaoHoje.setHours(refeicaoDate.getUTCHours(), refeicaoDate.getUTCMinutes(), 0, 0);
+
+      const agora = new Date();
+
+      const diffEmMilissegundos = agora - dataRefeicaoHoje;
+
+      const limiteAtrasoMs = 4 * 60 * 60 * 1000;
+
+      if (diffEmMilissegundos > limiteAtrasoMs) {
+        alert("Tempo esgotado! Esta refeição está atrasada há mais de 4 horas e não pode mais ser marcada.");
+        return;
+      }
+    }
+
+    onToggleConcluida(refeicao.id, !concluida);
+  };
+
   return (
     <div className={`border rounded-2xl overflow-hidden transition-all duration-300 ${concluida ? 'border-zinc-100 dark:border-zinc-800/40 bg-zinc-50/50 dark:bg-zinc-900/20 opacity-70' : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:border-zinc-300 dark:hover:border-zinc-700'}`}>
 
       <div className="w-full flex items-center p-4 sm:p-5">
 
-        {/* Checkbox de Conclusão */}
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleConcluida(refeicao.id, !concluida);
-          }}
+          onClick={handleCheck}
           className={`shrink-0 flex items-center justify-center w-8 h-8 rounded-full border-2 transition-colors mr-4 ${concluida ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-zinc-300 dark:border-zinc-600 text-transparent hover:border-emerald-400 dark:hover:border-emerald-500'}`}
         >
           {concluida && <Check size={16} strokeWidth={3} />}
         </button>
 
-        {/* Info da Refeição */}
         <div
           onClick={() => temAlimentos && setAberto(!aberto)}
           className={`flex-1 flex items-center justify-between ${temAlimentos ? 'cursor-pointer' : 'cursor-default'}`}
@@ -298,7 +318,6 @@ export function ListaRefeicoes({ onNovaRefeicao, onEditar, drawerAberto, onAbrir
     carregarRefeicoes();
   }, [dietaAtiva]);
 
-  // Função para lidar com o checkbox
   const handleToggleConcluida = async (refeicaoId, novoStatus) => {
     setRefeicoes(refeicoesAtuais =>
       refeicoesAtuais.map(r =>
@@ -306,11 +325,15 @@ export function ListaRefeicoes({ onNovaRefeicao, onEditar, drawerAberto, onAbrir
       )
     );
 
-    try {
-      await api.patch(`/meals/${refeicaoId}`, { concluida: novoStatus });
-    } catch (error) {
-      console.error("Erro ao atualizar status", error);
-      carregarRefeicoes(); // Reverte em caso de erro
+    if (navigator.onLine) {
+      try {
+        await api.patch(`/meals/${refeicaoId}`, { concluida: novoStatus });
+      } catch (error) {
+        console.error("Erro ao atualizar", error);
+        carregarRefeicoes();
+      }
+    } else {
+      SyncManager.adicionarNaFila('patch', `/meals/${refeicaoId}`, { concluida: novoStatus });
     }
   };
 

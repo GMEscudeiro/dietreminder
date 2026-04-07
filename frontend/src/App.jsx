@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Moon, Sun, Menu, LogOut } from 'lucide-react';
 import { useTheme } from './context/ThemeContext';
@@ -6,6 +6,7 @@ import { LoginForm } from './components/auth/LoginForm';
 import { RegisterForm } from './components/auth/RegisterForm';
 import { CadastroRefeicao } from './components/Refeicao/CadastroRefeicao';
 import { ListaRefeicoes } from './components/Refeicao/ListaRefeicoes';
+import { SyncManager } from './services/syncManager';
 
 function App() {
   const [mode, setMode] = useState(() => {
@@ -16,6 +17,16 @@ function App() {
   const { theme, toggleTheme } = useTheme();
   const [drawerAberto, setDrawerAberto] = useState(false);
   const [refeicaoSendoEditada, setRefeicaoSendoEditada] = useState(null);
+
+  useEffect(() => {
+    window.addEventListener('online', SyncManager.sincronizar);
+
+    if (navigator.onLine) {
+      SyncManager.sincronizar();
+    }
+
+    return () => window.removeEventListener('online', SyncManager.sincronizar);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('@DietReminder:token');

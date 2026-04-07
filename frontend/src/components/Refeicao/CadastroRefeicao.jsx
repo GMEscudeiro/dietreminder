@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Search, Plus, Save, X, Clock, Type, List, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import api from '../../services/api';
 import { FoodList } from './FoodList';
+import { SyncManager } from '../../services/syncManager';
 
 // --- Sub-componentes de Formulário ---
 
@@ -204,9 +205,7 @@ export function CadastroRefeicao({ onVoltar, refeicaoParaEditar }) {
   };
 
   const handleSalvar = async () => {
-    if (!validarFormulario()) {
-      return;
-    }
+    if (!validarFormulario()) return;
 
     setIsSaving(true);
 
@@ -220,18 +219,31 @@ export function CadastroRefeicao({ onVoltar, refeicaoParaEditar }) {
       }))
     };
 
-    try {
-      if (isEditing) {
-        await api.patch(`/meals/${refeicaoParaEditar.id}`, payload);
-      } else {
-        await api.post('/meals', payload);
+    if (navigator.onLine) {
+      try {
+        if (isEditing) {
+          await api.patch(`/meals/${refeicaoParaEditar.id}`, payload);
+        } else {
+          await api.post('/meals', payload);
+        }
+        onVoltar();
+      } catch (err) {
+        alert("Erro ao salvar a refeição.");
+      } finally {
+        setIsSaving(false);
       }
-      onVoltar();
-    } catch (err) {
-      console.error(err);
-      alert("Erro ao salvar a refeição. Verifique os dados.");
-    } finally {
+    } else {
+      const metodo = isEditing ? 'patch' : 'post';
+      const url = isEditing ? `/meals/${refeicaoParaEditar.id}` : '/meals';
+
+      SyncManager.adicionarNaFila(metodo, url, payload);
+
+      alert(isEditing
+        ? "Você está offline. A edição foi salva e será sincronizada em breve."
+        : "Você está offline. A nova refeição foi salva localmente e aparecerá quando a internet voltar.");
+
       setIsSaving(false);
+      onVoltar();
     }
   };
 
