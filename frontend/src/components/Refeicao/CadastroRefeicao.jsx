@@ -1,50 +1,55 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, Plus, Save, X, Clock, Type, List, ArrowLeft, Loader2 } from 'lucide-react';
+import { Search, Plus, Save, X, Clock, Type, List, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import api from '../../services/api';
 import { FoodList } from './FoodList';
 
 // --- Sub-componentes de Formulário ---
 
-function FormInput({ label, icon: Icon, containerClassName = '', ...props }) {
+function FormInput({ label, icon: Icon, error, containerClassName = '', ...props }) {
   return (
     <div className={`flex flex-col gap-1.5 relative group/input ${containerClassName}`}>
-      <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 ml-1 uppercase tracking-wider">
+      <label className={`text-xs font-semibold ml-1 uppercase tracking-wider transition-colors ${error ? 'text-red-500' : 'text-zinc-500 dark:text-zinc-400'}`}>
         {label}
       </label>
       <div className="relative">
         {Icon && (
           <Icon
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 group-focus-within/input:text-zinc-900 dark:group-focus-within/input:text-zinc-100 pointer-events-none transition-colors"
+            className={`absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${error ? 'text-red-400' : 'text-zinc-400 dark:text-zinc-500 group-focus-within/input:text-zinc-900 dark:group-focus-within/input:text-zinc-100'}`}
             size={16}
             strokeWidth={1.5}
           />
         )}
         <input
           {...props}
-          className={`w-full ${Icon ? 'pl-10' : 'pl-4'} pr-4 py-2.5 bg-transparent border border-zinc-200 dark:border-zinc-800 text-sm rounded-xl transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-300 focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-300 ${props.type === 'time' ? 'appearance-none [&::-webkit-calendar-picker-indicator]:dark:invert' : ''} ${props.disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`w-full ${Icon ? 'pl-10' : 'pl-4'} pr-4 py-2.5 bg-transparent border text-sm rounded-xl transition-all focus:outline-none focus:ring-1 ${props.type === 'time' ? 'appearance-none [&::-webkit-calendar-picker-indicator]:dark:invert' : ''} ${props.disabled ? 'opacity-50 cursor-not-allowed' : ''} ${error ? 'border-red-500 text-red-900 dark:text-red-100 focus:border-red-500 focus:ring-red-500 placeholder:text-red-300 dark:placeholder:text-red-800' : 'border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 focus:border-zinc-900 dark:focus:border-zinc-300 focus:ring-zinc-900 dark:focus:ring-zinc-300 placeholder:text-zinc-400'}`}
         />
       </div>
+      {error && (
+        <span className="text-[10px] font-medium text-red-500 ml-1 flex items-center gap-1 mt-0.5">
+          <AlertCircle size={10} /> {error}
+        </span>
+      )}
     </div>
   );
 }
 
-function FormSelect({ label, icon: Icon, options, containerClassName = '', ...props }) {
+function FormSelect({ label, icon: Icon, options, error, containerClassName = '', ...props }) {
   return (
     <div className={`flex flex-col gap-1.5 relative group/input ${containerClassName}`}>
-      <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 ml-1 uppercase tracking-wider">
+      <label className={`text-xs font-semibold ml-1 uppercase tracking-wider transition-colors ${error ? 'text-red-500' : 'text-zinc-500 dark:text-zinc-400'}`}>
         {label}
       </label>
       <div className="relative">
         {Icon && (
           <Icon
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-500 group-focus-within/input:text-zinc-900 dark:group-focus-within/input:text-zinc-100 pointer-events-none transition-colors"
+            className={`absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${error ? 'text-red-400' : 'text-zinc-400 dark:text-zinc-500 group-focus-within/input:text-zinc-900 dark:group-focus-within/input:text-zinc-100'}`}
             size={16}
             strokeWidth={1.5}
           />
         )}
         <select
           {...props}
-          className={`w-full ${Icon ? 'pl-10' : 'pl-4'} pr-10 py-2.5 bg-transparent border border-zinc-200 dark:border-zinc-800 text-sm rounded-xl transition-all text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-300 focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-300 appearance-none cursor-pointer`}
+          className={`w-full ${Icon ? 'pl-10' : 'pl-4'} pr-10 py-2.5 bg-transparent border text-sm rounded-xl transition-all focus:outline-none focus:ring-1 appearance-none cursor-pointer ${error ? 'border-red-500 text-red-900 dark:text-red-100 focus:border-red-500 focus:ring-red-500' : 'border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 focus:border-zinc-900 dark:focus:border-zinc-300 focus:ring-zinc-900 dark:focus:ring-zinc-300'}`}
         >
           <option value="" disabled className="dark:bg-zinc-900">Selecione uma opção...</option>
           {options.map(opt => (
@@ -53,10 +58,15 @@ function FormSelect({ label, icon: Icon, options, containerClassName = '', ...pr
             </option>
           ))}
         </select>
-        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400">
+        <div className={`absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none ${error ? 'text-red-400' : 'text-zinc-400'}`}>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
         </div>
       </div>
+      {error && (
+        <span className="text-[10px] font-medium text-red-500 ml-1 flex items-center gap-1 mt-0.5">
+          <AlertCircle size={10} /> {error}
+        </span>
+      )}
     </div>
   );
 }
@@ -66,7 +76,6 @@ function FormSelect({ label, icon: Icon, options, containerClassName = '', ...pr
 export function CadastroRefeicao({ onVoltar, refeicaoParaEditar }) {
   const [dietas, setDietas] = useState([]);
 
-  // Mapeamento inicial ao editar, já lidando com os nomes da TACO
   const [alimentosAdicionados, setAlimentosAdicionados] = useState(() => {
     return refeicaoParaEditar?.alimentos_refeicoes?.map(item => {
       const a = item.alimentos;
@@ -83,16 +92,14 @@ export function CadastroRefeicao({ onVoltar, refeicaoParaEditar }) {
   });
 
   const [nomeRefeicao, setNomeRefeicao] = useState(refeicaoParaEditar?.nome || '');
-
-  // Extrai apenas o HH:mm se a data vier do banco no formato ISO
   const [horarioRefeicao, setHorarioRefeicao] = useState(() => {
     if (!refeicaoParaEditar?.horario) return '';
     return refeicaoParaEditar.horario.substring(11, 16);
   });
-
   const [dietaSelecionada, setDietaSelecionada] = useState(refeicaoParaEditar?.dietaId || '');
 
-  // Estados de busca
+  const [errosCampos, setErrosCampos] = useState({});
+
   const [termoBusca, setTermoBusca] = useState('');
   const [resultadosBusca, setResultadosBusca] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -169,9 +176,35 @@ export function CadastroRefeicao({ onVoltar, refeicaoParaEditar }) {
     setTermoBusca('');
   };
 
+  // Função para limpar o erro de um campo específico enquanto o usuário digita
+  const limparErro = (campo) => {
+    if (errosCampos[campo]) {
+      setErrosCampos(prev => ({ ...prev, [campo]: null }));
+    }
+  };
+
+  // Função de Validação
+  const validarFormulario = () => {
+    const novosErros = {};
+
+    if (!nomeRefeicao.trim()) {
+      novosErros.nome = 'Dê um nome para a refeição.';
+    }
+
+    if (!dietaSelecionada) {
+      novosErros.dieta = 'Selecione uma dieta.';
+    }
+
+    if (!horarioRefeicao) {
+      novosErros.horario = 'Defina o horário.';
+    }
+
+    setErrosCampos(novosErros);
+    return Object.keys(novosErros).length === 0;
+  };
+
   const handleSalvar = async () => {
-    if (!nomeRefeicao || !dietaSelecionada) {
-      alert("Preencha o nome e a dieta!");
+    if (!validarFormulario()) {
       return;
     }
 
@@ -180,7 +213,7 @@ export function CadastroRefeicao({ onVoltar, refeicaoParaEditar }) {
     const payload = {
       nome: nomeRefeicao,
       dietaId: dietaSelecionada,
-      horario: horarioRefeicao || null, // O backend NestJS fará a conversão do "14:30"
+      horario: horarioRefeicao || null,
       itens: alimentosAdicionados.map(item => ({
         alimentoId: item.id,
         quantidade: Number(item.quantidade)
@@ -235,8 +268,9 @@ export function CadastroRefeicao({ onVoltar, refeicaoParaEditar }) {
             label="Nome da Refeição"
             icon={Type}
             value={nomeRefeicao}
-            onChange={(e) => setNomeRefeicao(e.target.value)}
+            onChange={(e) => { setNomeRefeicao(e.target.value); limparErro('nome'); }}
             placeholder="Ex: Almoço"
+            error={errosCampos.nome}
           />
 
           <FormInput
@@ -244,16 +278,18 @@ export function CadastroRefeicao({ onVoltar, refeicaoParaEditar }) {
             icon={Clock}
             type="time"
             value={horarioRefeicao}
-            onChange={(e) => setHorarioRefeicao(e.target.value)}
+            onChange={(e) => { setHorarioRefeicao(e.target.value); limparErro('horario'); }}
+            error={errosCampos.horario}
           />
 
           <FormSelect
             label="Dieta Vinculada"
             icon={List}
             value={dietaSelecionada}
-            onChange={(e) => setDietaSelecionada(e.target.value)}
+            onChange={(e) => { setDietaSelecionada(e.target.value); limparErro('dieta'); }}
             containerClassName="sm:col-span-2"
             options={dietas.map(d => ({ value: d.id, label: d.nome || d.nomeDieta }))}
+            error={errosCampos.dieta}
           />
         </div>
 
