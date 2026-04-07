@@ -1,40 +1,48 @@
 import { motion } from 'framer-motion';
-import { ArrowRight, Mail, Lock, Loader2 } from 'lucide-react';
+import { ArrowRight, Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 import api from '../../services/api';
 
 const containerVariants = {
   hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-    },
-  },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
 };
 
 const itemVariants = {
   hidden: { y: 10, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: {
-      type: 'spring',
-      stiffness: 400,
-      damping: 30,
-    },
-  },
+  visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 400, damping: 30 } },
 };
 
 export function LoginForm({ onSwitchMode, onLogin }) {
   const [formData, setFormData] = useState({ email: '', senha: '' });
-  const [isLoading, setIsLoading] = useState(false); // Estado para o botão de carregamento
+  const [errosCampos, setErrosCampos] = useState({});
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const validarFormulario = () => {
+    const novosErros = {};
+
+    if (!formData.email.trim()) {
+      novosErros.email = 'O e-mail é obrigatório.';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      novosErros.email = 'Digite um e-mail válido.';
+    }
+
+    if (!formData.senha) {
+      novosErros.senha = 'A senha é obrigatória.';
+    }
+
+    setErrosCampos(novosErros);
+    return Object.keys(novosErros).length === 0;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
     setError('');
+
+    if (!validarFormulario()) return;
+
+    setIsLoading(true);
 
     try {
       const response = await api.post('/auth/login', {
@@ -43,26 +51,25 @@ export function LoginForm({ onSwitchMode, onLogin }) {
       });
 
       const { access_token } = response.data;
-
       localStorage.setItem('@DietReminder:token', access_token);
 
       if (onLogin) onLogin();
-
     } catch (err) {
-      const message = err.response?.data?.message || 'Erro ao realizar login';
-      setError(message);
+      const message = err.response?.data?.message || 'E-mail ou senha incorretos.';
+      setError(Array.isArray(message) ? message[0] : message);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const limparErro = (campo) => {
+    if (errosCampos[campo]) {
+      setErrosCampos({ ...errosCampos, [campo]: null });
+    }
+  };
+
   return (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="w-full flex flex-col gap-8 px-4 sm:px-0"
-    >
+    <motion.div variants={containerVariants} initial="hidden" animate="visible" className="w-full flex flex-col gap-8 px-4 sm:px-0">
       <motion.div variants={itemVariants} className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">Bem-vindo(a)</h1>
         <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
@@ -70,82 +77,63 @@ export function LoginForm({ onSwitchMode, onLogin }) {
         </p>
       </motion.div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5" noValidate>
         {error && (
-          <span className="text-xs text-red-500 font-medium text-center bg-red-50 dark:bg-red-900/20 py-2 rounded-lg">
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-xs text-red-500 font-medium text-center bg-red-50 dark:bg-red-900/10 py-2.5 rounded-lg border border-red-100 dark:border-red-900/20">
             {error}
-          </span>
+          </motion.div>
         )}
+
         <motion.div variants={itemVariants} className="flex flex-col gap-1.5 group">
-          <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 ml-1 uppercase tracking-wider">
+          <label className={`text-xs font-semibold ml-1 uppercase tracking-wider ${errosCampos.email ? 'text-red-500' : 'text-zinc-500 dark:text-zinc-400'}`}>
             E-mail
           </label>
           <div className="relative group/input">
-            <Mail
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors text-zinc-400 dark:text-zinc-500 group-focus-within/input:text-zinc-900 dark:group-focus-within/input:text-white pointer-events-none"
-              size={18}
-              strokeWidth={1.5}
-            />
+            <Mail className={`absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors pointer-events-none ${errosCampos.email ? 'text-red-400' : 'text-zinc-400 dark:text-zinc-500 group-focus-within/input:text-zinc-900 dark:group-focus-within/input:text-white'}`} size={18} strokeWidth={1.5} />
             <input
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onChange={(e) => { setFormData({ ...formData, email: e.target.value }); limparErro('email'); }}
               placeholder="exemplo@email.com"
-              className="w-full pl-11 pr-4 py-3 bg-transparent border border-zinc-200 dark:border-zinc-800 text-sm rounded-xl transition-all duration-300 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 hover:border-zinc-300 dark:hover:border-zinc-700 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-300 focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-300"
-              required
+              className={`w-full pl-11 pr-4 py-3 bg-transparent border text-sm rounded-xl transition-all duration-300 focus:outline-none focus:ring-1 ${errosCampos.email ? 'border-red-500 text-red-900 dark:text-red-100 focus:border-red-500 focus:ring-red-500' : 'border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 focus:border-zinc-900 dark:focus:border-zinc-300 focus:ring-zinc-900 dark:focus:ring-zinc-300 placeholder:text-zinc-400 dark:placeholder:text-zinc-600'}`}
             />
           </div>
+          {errosCampos.email && (
+            <span className="text-[10px] font-medium text-red-500 ml-1 flex items-center gap-1 mt-0.5">
+              <AlertCircle size={10} /> {errosCampos.email}
+            </span>
+          )}
         </motion.div>
 
         <motion.div variants={itemVariants} className="flex flex-col gap-1.5 group">
-          <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 ml-1 uppercase tracking-wider">
+          <label className={`text-xs font-semibold ml-1 uppercase tracking-wider ${errosCampos.senha ? 'text-red-500' : 'text-zinc-500 dark:text-zinc-400'}`}>
             Senha
           </label>
           <div className="relative group/input">
-            <Lock
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors text-zinc-400 dark:text-zinc-500 group-focus-within/input:text-zinc-900 dark:group-focus-within/input:text-white pointer-events-none"
-              size={18}
-              strokeWidth={1.5}
-            />
+            <Lock className={`absolute left-3.5 top-1/2 -translate-y-1/2 transition-colors pointer-events-none ${errosCampos.senha ? 'text-red-400' : 'text-zinc-400 dark:text-zinc-500 group-focus-within/input:text-zinc-900 dark:group-focus-within/input:text-white'}`} size={18} strokeWidth={1.5} />
             <input
               type="password"
               value={formData.senha}
-              onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
+              onChange={(e) => { setFormData({ ...formData, senha: e.target.value }); limparErro('senha'); }}
               placeholder="••••••••"
-              className="w-full pl-11 pr-4 py-3 bg-transparent border border-zinc-200 dark:border-zinc-800 text-sm rounded-xl transition-all duration-300 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 hover:border-zinc-300 dark:hover:border-zinc-700 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-300 focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-300"
-              required
+              className={`w-full pl-11 pr-4 py-3 bg-transparent border text-sm rounded-xl transition-all duration-300 focus:outline-none focus:ring-1 ${errosCampos.senha ? 'border-red-500 text-red-900 dark:text-red-100 focus:border-red-500 focus:ring-red-500' : 'border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-100 focus:border-zinc-900 dark:focus:border-zinc-300 focus:ring-zinc-900 dark:focus:ring-zinc-300 placeholder:text-zinc-400 dark:placeholder:text-zinc-600'}`}
             />
           </div>
+          {errosCampos.senha && (
+            <span className="text-[10px] font-medium text-red-500 ml-1 flex items-center gap-1 mt-0.5">
+              <AlertCircle size={10} /> {errosCampos.senha}
+            </span>
+          )}
         </motion.div>
 
-        <motion.button
-          variants={itemVariants}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          type="submit"
-          disabled={isLoading}
-          className="mt-4 w-full flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-900 py-3 rounded-xl text-sm font-medium transition-colors border border-transparent shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
-        >
-          {isLoading ? (
-            <Loader2 className="animate-spin" size={18} />
-          ) : (
-            <>
-              Entrar
-              <ArrowRight size={16} strokeWidth={1.5} />
-            </>
-          )}
+        <motion.button variants={itemVariants} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" disabled={isLoading} className="mt-4 w-full flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-900 py-3 rounded-xl text-sm font-medium transition-colors shadow-sm disabled:opacity-70">
+          {isLoading ? <Loader2 className="animate-spin" size={18} /> : <><>Entrar</><ArrowRight size={16} strokeWidth={1.5} /></>}
         </motion.button>
       </form>
 
       <motion.div variants={itemVariants} className="mt-4 text-center">
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          Novo por aqui?{' '}
-          <button
-            onClick={onSwitchMode}
-            className="text-zinc-900 dark:text-white font-medium hover:underline underline-offset-4 transition-all"
-          >
-            Criar conta
-          </button>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">Novo por aqui?{' '}
+          <button onClick={onSwitchMode} className="text-zinc-900 dark:text-white font-medium hover:underline underline-offset-4 transition-all">Criar conta</button>
         </p>
       </motion.div>
     </motion.div>
