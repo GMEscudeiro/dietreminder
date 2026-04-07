@@ -13,6 +13,10 @@ export function FoodItem({ alimento, aoRemover }) {
             {alimento.proteina}g Proteína
           </span>
           <span className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>
+            {alimento.lipideos}g Lipideos
+          </span>
+          <span className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
             {alimento.carboidratos}g Carbs
           </span>

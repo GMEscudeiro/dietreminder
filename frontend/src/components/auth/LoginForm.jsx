@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
-import { ArrowRight, Mail, Lock } from 'lucide-react';
+import { ArrowRight, Mail, Lock, Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import api from '../../services/api';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -27,11 +28,32 @@ const itemVariants = {
 
 export function LoginForm({ onSwitchMode, onLogin }) {
   const [formData, setFormData] = useState({ email: '', senha: '' });
+  const [isLoading, setIsLoading] = useState(false); // Estado para o botão de carregamento
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Login attempt:', formData);
-    if (onLogin) onLogin();
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const response = await api.post('/auth/login', {
+        email: formData.email,
+        password: formData.senha,
+      });
+
+      const { access_token } = response.data;
+
+      localStorage.setItem('@DietReminder:token', access_token);
+
+      if (onLogin) onLogin();
+
+    } catch (err) {
+      const message = err.response?.data?.message || 'Erro ao realizar login';
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -49,6 +71,11 @@ export function LoginForm({ onSwitchMode, onLogin }) {
       </motion.div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        {error && (
+          <span className="text-xs text-red-500 font-medium text-center bg-red-50 dark:bg-red-900/20 py-2 rounded-lg">
+            {error}
+          </span>
+        )}
         <motion.div variants={itemVariants} className="flex flex-col gap-1.5 group">
           <label className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 ml-1 uppercase tracking-wider">
             E-mail
@@ -96,10 +123,17 @@ export function LoginForm({ onSwitchMode, onLogin }) {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           type="submit"
-          className="mt-4 w-full flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-900 py-3 rounded-xl text-sm font-medium transition-colors border border-transparent shadow-sm"
+          disabled={isLoading}
+          className="mt-4 w-full flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-900 py-3 rounded-xl text-sm font-medium transition-colors border border-transparent shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
         >
-          Entrar
-          <ArrowRight size={16} strokeWidth={1.5} />
+          {isLoading ? (
+            <Loader2 className="animate-spin" size={18} />
+          ) : (
+            <>
+              Entrar
+              <ArrowRight size={16} strokeWidth={1.5} />
+            </>
+          )}
         </motion.button>
       </form>
 
