@@ -12,3 +12,4 @@ https://trello.com/b/34avuu39/diet-reminder
 - Renan Casemiro Hessel (Equipe de desenvolvimento)
 - Pedro Henrique Valim (Equipe de desenvolvimento)
 - Gustavo Mendes Franco Lapin Atui (Equipe de desenvolvimento)
+https://planningpokeronline.com/OZss7KYFDNbBSnvVNuXC/
