@@ -6,8 +6,6 @@ datasource db {
   provider = "postgresql"
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model alimentos {
   id                  BigInt                @id
   categoria           String?
@@ -41,7 +39,6 @@ model alimentos {
   alimentos_refeicoes alimentos_refeicoes[]
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model alimentos_refeicoes {
   id          BigInt     @id @default(autoincrement())
   created_at  DateTime   @default(now()) @db.Timestamptz(6)
@@ -52,8 +49,6 @@ model alimentos_refeicoes {
   refeicoes   refeicoes? @relation(fields: [refeicao_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model dietas {
   id              String      @id(map: "Dietas_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   nomeDieta       String?
@@ -68,8 +63,6 @@ model dietas {
   refeicoes       refeicoes[]
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model refeicoes {
   id                  String                @id(map: "Refeições_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   dietaId             String?               @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -81,7 +74,6 @@ model refeicoes {
   dietas              dietas?               @relation(fields: [dietaId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Refeições_dietaId_fkey")
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model usuarios {
   id         String    @id(map: "Usuarios_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email      String    @unique

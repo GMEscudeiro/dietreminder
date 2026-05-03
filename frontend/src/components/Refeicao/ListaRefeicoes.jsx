@@ -69,7 +69,7 @@ function ConfirmacaoModal({ dietaAlvo, onConfirmar, onCancelar }) {
 
 // ─── Drawer lateral de dietas ─────────────────────────────────────────────────
 
-function DietaDrawer({ aberto, onFechar, dietaAtiva, dietas, onSelecionarDieta }) {
+function DietaDrawer({ aberto, onFechar, dietaAtiva, dietas, onSelecionarDieta, onNovaDieta, onEditarDieta }) {
   return (
     <AnimatePresence>
       {aberto && (
@@ -98,16 +98,30 @@ function DietaDrawer({ aberto, onFechar, dietaAtiva, dietas, onSelecionarDieta }
               {dietas.map((dieta) => {
                 const ativa = dietaAtiva?.id === dieta.id;
                 return (
-                  <button
-                    key={dieta.id}
-                    onClick={() => onSelecionarDieta(dieta)}
-                    className={`w-full text-left p-4 rounded-xl border transition-all ${ativa ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900' : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300'}`}
-                  >
-                    <span className="text-sm font-semibold block">{dieta.nome || dieta.nomeDieta}</span>
-                    <span className="text-xs opacity-60">Dieta cadastrada</span>
-                  </button>
+                  <div key={dieta.id} className="relative group">
+                    <button
+                      onClick={() => onSelecionarDieta(dieta)}
+                      className={`w-full text-left p-4 pr-12 rounded-xl border transition-all ${ativa ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900' : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300'}`}
+                    >
+                      <span className="text-sm font-semibold block">{dieta.nome || dieta.nomeDieta}</span>
+                      <span className="text-xs opacity-60">Dieta cadastrada</span>
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onEditarDieta(dieta); }}
+                      className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-colors ${ativa ? 'text-white/50 hover:text-white dark:text-zinc-900/50 dark:hover:text-zinc-900' : 'text-zinc-400 hover:text-zinc-600'}`}
+                    >
+                      <Pencil size={14} />
+                    </button>
+                  </div>
                 );
               })}
+
+              <button
+                onClick={onNovaDieta}
+                className="w-full mt-2 flex items-center justify-center gap-2 p-4 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:border-zinc-300 transition-all text-sm font-medium"
+              >
+                <Plus size={16} /> Nova Dieta
+              </button>
             </div>
           </motion.div>
         </>
@@ -281,23 +295,28 @@ function RefeicaoCard({ refeicao, onEditar, onToggleConcluida }) {
 
 // ─── Componente Principal ─────────────────────────────────────────────────────
 
-export function ListaRefeicoes({ onNovaRefeicao, onEditar, drawerAberto, onAbrirDrawer, onFecharDrawer }) {
+export function ListaRefeicoes({ onNovaRefeicao, onEditar, onNovaDieta, onEditarDieta, drawerAberto, onAbrirDrawer, onFecharDrawer }) {
   const [dietas, setDietas] = useState([]);
   const [dietaAtiva, setDietaAtiva] = useState(null);
   const [refeicoes, setRefeicoes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dietaPendente, setDietaPendente] = useState(null);
 
-  useEffect(() => {
-    async function carregarDietas() {
-      try {
-        const { data } = await api.get('/diets');
-        setDietas(data);
-        if (data.length > 0) setDietaAtiva(data[0]);
-      } catch (err) {
-        console.error("Erro ao buscar dietas", err);
-      }
+  async function carregarDietas() {
+    try {
+      const { data } = await api.get('/diets');
+      setDietas(data);
+      // Seleciona a dieta que está marcada como ATIVA no banco de dados
+      const ativa = data.find(d => d.Ativa === true) || data[0];
+      setDietaAtiva(ativa);
+    } catch (err) {
+      console.error("Erro ao buscar dietas", err);
+    } finally {
+      setIsLoading(false);
     }
+  }
+
+  useEffect(() => {
     carregarDietas();
   }, []);
 
@@ -380,6 +399,8 @@ export function ListaRefeicoes({ onNovaRefeicao, onEditar, drawerAberto, onAbrir
         dietaAtiva={dietaAtiva}
         dietas={dietas}
         onSelecionarDieta={(d) => { setDietaPendente(d); }}
+        onNovaDieta={onNovaDieta}
+        onEditarDieta={onEditarDieta}
       />
 
       <ConfirmacaoModal

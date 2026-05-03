@@ -7,7 +7,7 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    // Voltando para a URL de Pooling (DATABASE_URL) para rodar a aplicação
-    url: process.env["DATABASE_URL"], 
+    url: process.env["DATABASE_URL"],
+    // Se precisar de directUrl no config, adicione aqui se a versão suportar
   },
 });
