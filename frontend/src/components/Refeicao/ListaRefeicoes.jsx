@@ -231,28 +231,41 @@ function RefeicaoCard({ refeicao, onEditar, onToggleConcluida }) {
   };
 
   return (
-    <div className={`border rounded-2xl overflow-hidden transition-all duration-300 ${concluida ? 'border-zinc-100 dark:border-zinc-800/40 bg-zinc-50/50 dark:bg-zinc-900/20 opacity-70' : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:border-zinc-300 dark:hover:border-zinc-700'}`}>
-
+    <div
+      onClick={handleCheck}
+      className={`border rounded-2xl overflow-hidden transition-all duration-300 cursor-pointer select-none
+        ${concluida
+          ? 'border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/40 dark:bg-emerald-950/20 opacity-80'
+          : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:border-emerald-300 dark:hover:border-emerald-800 hover:shadow-md'
+        }`}
+    >
       <div className="w-full flex items-center p-4 sm:p-5">
 
-        <button
-          onClick={handleCheck}
-          className={`shrink-0 flex items-center justify-center w-8 h-8 rounded-full border-2 transition-colors mr-4 ${concluida ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-zinc-300 dark:border-zinc-600 text-transparent hover:border-emerald-400 dark:hover:border-emerald-500'}`}
+        <div className={`shrink-0 flex items-center justify-center w-8 h-8 rounded-full border-2 mr-4 transition-all duration-300
+          ${concluida
+            ? 'bg-emerald-500 border-emerald-500 text-white scale-110'
+            : 'border-zinc-300 dark:border-zinc-600 text-transparent hover:border-emerald-400'
+          }`}
         >
-          {concluida && <Check size={16} strokeWidth={3} />}
-        </button>
+          <motion.div
+            initial={false}
+            animate={{ scale: concluida ? 1 : 0, opacity: concluida ? 1 : 0 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+          >
+            <Check size={16} strokeWidth={3} />
+          </motion.div>
+        </div>
 
-        <div
-          onClick={() => temAlimentos && setAberto(!aberto)}
-          className={`flex-1 flex items-center justify-between ${temAlimentos ? 'cursor-pointer' : 'cursor-default'}`}
-        >
+        <div className="flex-1 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className={`flex flex-col items-center justify-center w-11 h-11 rounded-xl border shrink-0 transition-colors ${concluida ? 'bg-transparent border-zinc-200 dark:border-zinc-800' : 'bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800'}`}>
-              <Clock size={12} className="text-zinc-400 mb-0.5" />
-              <span className={`text-xs font-semibold ${concluida ? 'text-zinc-400' : ''}`}>{formatarHora(refeicao.horario)}</span>
+            <div className={`flex flex-col items-center justify-center w-11 h-11 rounded-xl border shrink-0 transition-colors
+              ${concluida ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900' : 'bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800'}`}
+            >
+              <Clock size={12} className={`mb-0.5 ${concluida ? 'text-emerald-400' : 'text-zinc-400'}`} />
+              <span className={`text-xs font-semibold ${concluida ? 'text-emerald-500' : ''}`}>{formatarHora(refeicao.horario)}</span>
             </div>
             <div className="flex flex-col gap-1">
-              <span className={`text-sm font-semibold transition-colors ${concluida ? 'text-zinc-500 line-through' : 'text-zinc-900 dark:text-zinc-100'}`}>
+              <span className={`text-sm font-semibold transition-colors ${concluida ? 'text-zinc-400 line-through' : 'text-zinc-900 dark:text-zinc-100'}`}>
                 {refeicao.nome}
               </span>
               {temAlimentos && (
@@ -265,9 +278,18 @@ function RefeicaoCard({ refeicao, onEditar, onToggleConcluida }) {
               )}
             </div>
           </div>
-          <motion.div animate={{ rotate: aberto ? 180 : 0 }} className={`text-zinc-400 ${concluida ? 'opacity-50' : ''}`}>
-            <ChevronDown size={18} />
-          </motion.div>
+
+          {/* Chevron abre/fecha sem acionar o check */}
+          {temAlimentos && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setAberto(!aberto); }}
+              className="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            >
+              <motion.div animate={{ rotate: aberto ? 180 : 0 }} className={`text-zinc-400 ${concluida ? 'opacity-50' : ''}`}>
+                <ChevronDown size={18} />
+              </motion.div>
+            </button>
+          )}
         </div>
       </div>
 
@@ -281,7 +303,10 @@ function RefeicaoCard({ refeicao, onEditar, onToggleConcluida }) {
                 <AlimentoItem key={item.alimentoId} item={item} />
               ))}
               <div className="mt-4 flex justify-end">
-                <button onClick={() => onEditar(refeicao)} className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 transition-all">
+                <button
+                  onClick={(e) => { e.stopPropagation(); onEditar(refeicao); }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 transition-all"
+                >
                   <Pencil size={13} /> Editar Refeição
                 </button>
               </div>
@@ -346,41 +371,43 @@ export function ListaRefeicoes({ onNovaRefeicao, onEditar, onNovaDieta, onEditar
 
     if (navigator.onLine) {
       try {
-        await api.patch(`/meals/${refeicaoId}`, { concluida: novoStatus });
+        await api.patch(`/meals/${refeicaoId}/status`, { concluida: novoStatus });
       } catch (error) {
         console.error("Erro ao atualizar", error);
         carregarRefeicoes();
       }
     } else {
-      SyncManager.adicionarNaFila('patch', `/meals/${refeicaoId}`, { concluida: novoStatus });
+      SyncManager.adicionarNaFila('patch', `/meals/${refeicaoId}/status`, { concluida: novoStatus });
     }
   };
 
-  const totaisDia = refeicoes.reduce((acc, refeicao) => {
-    const t = (refeicao.alimentos_refeicoes || []).reduce((a, item) => {
-      const f = item.quantidade / 100;
-      const al = item.alimentos;
+  const totaisDia = refeicoes
+    .filter(r => r.concluida)
+    .reduce((acc, refeicao) => {
+      const t = (refeicao.alimentos_refeicoes || []).reduce((a, item) => {
+        const f = item.quantidade / 100;
+        const al = item.alimentos;
 
-      const proteina = al.Prote_na__g_ ?? al.proteina ?? 0;
-      const gordura = al.Lip_deos__g_ ?? al.lipideos ?? 0;
-      const carboidratos = al.Carboidrato__g_ ?? al.carboidratos ?? 0;
-      const calorias = al.energia_kcal ?? al.calorias ?? 0;
+        const proteina = al.Prote_na__g_ ?? al.proteina ?? 0;
+        const gordura = al.Lip_deos__g_ ?? al.lipideos ?? 0;
+        const carboidratos = al.Carboidrato__g_ ?? al.carboidratos ?? 0;
+        const calorias = al.energia_kcal ?? al.calorias ?? 0;
+
+        return {
+          p: a.p + (proteina * f),
+          c: a.c + (carboidratos * f),
+          g: a.g + (gordura * f),
+          k: a.k + (calorias * f),
+        };
+      }, { p: 0, c: 0, g: 0, k: 0 });
 
       return {
-        p: a.p + (proteina * f),
-        c: a.c + (carboidratos * f),
-        g: a.g + (gordura * f),
-        k: a.k + (calorias * f),
+        proteina: acc.proteina + t.p,
+        carboidratos: acc.carboidratos + t.c,
+        gordura: acc.gordura + t.g,
+        calorias: acc.calorias + t.k,
       };
-    }, { p: 0, c: 0, g: 0, k: 0 });
-
-    return {
-      proteina: acc.proteina + t.p,
-      carboidratos: acc.carboidratos + t.c,
-      gordura: acc.gordura + t.g,
-      calorias: acc.calorias + t.k,
-    };
-  }, { proteina: 0, carboidratos: 0, gordura: 0, calorias: 0 });
+    }, { proteina: 0, carboidratos: 0, gordura: 0, calorias: 0 });
 
   const hoje = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
 
@@ -428,16 +455,82 @@ export function ListaRefeicoes({ onNovaRefeicao, onEditar, onNovaDieta, onEditar
           </button>
         )}
 
-        <div className="mb-8 p-5 rounded-2xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-[10px] font-bold uppercase tracking-widest opacity-70">Resumo Diário</span>
-            <span className="text-xl font-black">{totaisDia.calorias.toFixed(0)} kcal</span>
+        <div className="mb-8 rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-sm">
+          {/* Header de calorias */}
+          <div className="p-5 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">Resumo Diário</span>
+              {dietaAtiva?.caloriasTot
+                ? <span className="text-[10px] font-semibold opacity-60">Meta: {dietaAtiva.caloriasTot} kcal</span>
+                : null}
+            </div>
+            <div className="flex items-end justify-between gap-2 mb-3">
+              <span className="text-3xl font-black leading-none">{totaisDia.calorias.toFixed(0)}</span>
+              <span className="text-sm opacity-70 mb-0.5">kcal consumidas</span>
+            </div>
+            {dietaAtiva?.caloriasTot ? (() => {
+              const pct = Math.min((totaisDia.calorias / dietaAtiva.caloriasTot) * 100, 100);
+              const excedido = totaisDia.calorias > dietaAtiva.caloriasTot;
+              return (
+                <>
+                  <div className="h-2 w-full bg-white/20 dark:bg-zinc-900/20 rounded-full overflow-hidden">
+                    <div
+                      style={{ width: `${pct}%` }}
+                      className={`h-full rounded-full transition-all duration-700 ${excedido ? 'bg-rose-400' : 'bg-emerald-400'}`}
+                    />
+                  </div>
+                  <div className="mt-2 flex justify-between text-[10px] font-semibold opacity-70">
+                    <span>{pct.toFixed(0)}% da meta</span>
+                    {excedido
+                      ? <span className="text-rose-300">+{(totaisDia.calorias - dietaAtiva.caloriasTot).toFixed(0)} kcal excedido</span>
+                      : <span>{(dietaAtiva.caloriasTot - totaisDia.calorias).toFixed(0)} kcal restantes</span>
+                    }
+                  </div>
+                </>
+              );
+            })() : (
+              <div className="h-2 w-full bg-white/20 dark:bg-zinc-900/20 rounded-full overflow-hidden">
+                <MacroBar {...totaisDia} />
+              </div>
+            )}
           </div>
-          <MacroBar {...totaisDia} />
-          <div className="mt-4 grid grid-cols-3 gap-2 text-[10px] font-bold uppercase text-center opacity-80">
-            <div><p>Proteína</p><p className="text-sm">{totaisDia.proteina.toFixed(1)}g</p></div>
-            <div><p>Carbs</p><p className="text-sm">{totaisDia.carboidratos.toFixed(1)}g</p></div>
-            <div><p>Gordura</p><p className="text-sm">{totaisDia.gordura.toFixed(1)}g</p></div>
+
+          {/* Grid de macros com metas */}
+          <div className="grid grid-cols-3 divide-x divide-zinc-100 dark:divide-zinc-800 bg-white dark:bg-zinc-950">
+            {[
+              { label: 'PROTEÍNA', valor: totaisDia.proteina, alvo: dietaAtiva?.proteinaAlvo, cor: 'bg-blue-500', corText: 'text-blue-600 dark:text-blue-400', corBar: 'bg-blue-500' },
+              { label: 'CARBOIDRATO', valor: totaisDia.carboidratos, alvo: dietaAtiva?.carboidratoAlvo, cor: 'bg-amber-500', corText: 'text-amber-600 dark:text-amber-400', corBar: 'bg-amber-500' },
+              { label: 'GORDURA', valor: totaisDia.gordura, alvo: dietaAtiva?.gorduraAlvo, cor: 'bg-rose-400', corText: 'text-rose-600 dark:text-rose-400', corBar: 'bg-rose-500' },
+            ].map(({ label, valor, alvo, corText, corBar }) => {
+              const pct = alvo ? Math.min((valor / alvo) * 100, 100) : 0;
+              const excedido = alvo && valor > alvo;
+              return (
+                <div key={label} className="flex flex-col gap-2 p-4">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">{label}</span>
+                  <div className="flex items-baseline gap-1">
+                    <span className={`text-base font-black ${corText}`}>{valor.toFixed(1)}</span>
+                    {alvo && <span className="text-[10px] text-zinc-400 font-medium">/ {alvo}g</span>}
+                  </div>
+                  {alvo ? (
+                    <>
+                      <div className="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                        <div
+                          style={{ width: `${pct}%` }}
+                          className={`h-full rounded-full transition-all duration-700 ${excedido ? 'bg-rose-500' : corBar}`}
+                        />
+                      </div>
+                      <span className={`text-[9px] font-semibold ${excedido ? 'text-rose-500' : 'text-zinc-400'}`}>
+                        {excedido
+                          ? `+${(valor - alvo).toFixed(1)}g excedido`
+                          : `${pct.toFixed(0)}%`}
+                      </span>
+                    </>
+                  ) : (
+                    <div className="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full" />
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
