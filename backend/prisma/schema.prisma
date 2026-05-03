@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model alimentos {
+  id                  BigInt                @id
+  categoria           String?
+  descricao           String?
+  umidade             String?
+  energia_kcal        String?
+  energia_kj          String?
+  Prote_na__g_        String?               @map("Proteína..g.")
+  Lip_deos__g_        String?               @map("Lipídeos..g.")
+  Colesterol__mg_     String?               @map("Colesterol..mg.")
+  Carboidrato__g_     String?               @map("Carboidrato..g.")
+  Fibra_Alimentar__g_ String?               @map("Fibra.Alimentar..g.")
+  Cinzas__g_          String?               @map("Cinzas..g.")
+  C_lcio__mg_         String?               @map("Cálcio..mg.")
+  Magn_sio__mg_       String?               @map("Magnésio..mg.")
+  Mangan_s__mg_       String?               @map("Manganês..mg.")
+  F_sforo__mg_        String?               @map("Fósforo..mg.")
+  Ferro__mg_          String?               @map("Ferro..mg.")
+  S_dio__mg_          String?               @map("Sódio..mg.")
+  Pot_ssio__mg_       String?               @map("Potássio..mg.")
+  Cobre__mg_          String?               @map("Cobre..mg.")
+  Zinco__mg_          String?               @map("Zinco..mg.")
+  Retinol__mcg_       String?               @map("Retinol..mcg.")
+  RE__mcg_            String?               @map("RE..mcg.")
+  RAE__mcg_           String?               @map("RAE..mcg.")
+  Tiamina__mg_        String?               @map("Tiamina..mg.")
+  Riboflavina__mg_    String?               @map("Riboflavina..mg.")
+  Piridoxina__mg_     String?               @map("Piridoxina..mg.")
+  Niacina__mg_        String?               @map("Niacina..mg.")
+  Vitamina_C__mg_     String?               @map("Vitamina.C..mg.")
+  alimentos_refeicoes alimentos_refeicoes[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model alimentos_refeicoes {
+  id          BigInt     @id @default(autoincrement())
+  created_at  DateTime   @default(now()) @db.Timestamptz(6)
+  refeicao_id String?    @db.Uuid
+  alimento_id BigInt?
+  quantidade  Float?
+  alimentos   alimentos? @relation(fields: [alimento_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  refeicoes   refeicoes? @relation(fields: [refeicao_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model dietas {
+  id              String      @id(map: "Dietas_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nomeDieta       String?
+  userId          String?     @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  caloriasTot     Decimal?    @db.Decimal
+  proteinaAlvo    Decimal?    @db.Decimal
+  carboidratoAlvo Decimal?    @db.Decimal
+  gorduraAlvo     Decimal?    @db.Decimal
+  Ativa           Boolean?
+  created_at      DateTime    @db.Timestamptz(6)
+  usuarios        usuarios?   @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Dietas_userId_fkey")
+  refeicoes       refeicoes[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model refeicoes {
+  id                  String                @id(map: "Refeições_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  dietaId             String?               @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nome                String?
+  created_at          DateTime              @db.Timestamp(6)
+  horario             DateTime?             @db.Time(6)
+  concluida           Boolean?              @default(false)
+  alimentos_refeicoes alimentos_refeicoes[]
+  dietas              dietas?               @relation(fields: [dietaId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Refeições_dietaId_fkey")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model usuarios {
+  id         String    @id(map: "Usuarios_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email      String    @unique
+  nome       String?   @db.VarChar
+  senha_hash String?
+  created_at DateTime? @db.Timestamptz(6)
+  dietas     dietas[]
+}

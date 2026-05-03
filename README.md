@@ -5,6 +5,7 @@ Com um sistema de registro de refeições, contagem de macronutrientes e notific
 ## Trello
 https://trello.com/b/34avuu39/diet-reminder
 
+
 ## Membros do grupo
 - Lucas Tonoli Cabral Duarte (PO)
 - Guilherme Morais Escudeiro (ScrumMaster)
