@@ -11,21 +11,29 @@ export class MealsController {
   async create(@Body() createRefeicaoDto: CreateRefeicaoDto) {
     return this.mealsService.create(createRefeicaoDto);
   }
+
   @Get()
-  async findAll(@Query('dietaId') dietaId: string) {
+  async findAll(
+    @Query('dietaId') dietaId: string,
+    @Query('diaDaSemana') diaDaSemana?: string,
+  ) {
     if (!dietaId) {
       return [];
     }
-    return this.mealsService.findAllByDiet(dietaId);
+const dia = diaDaSemana !== undefined ? parseInt(diaDaSemana, 10) : undefined;
+const diaFinal = dia !== undefined && !isNaN(dia) ? dia : undefined;
+return this.mealsService.findAllByDiet(dietaId, diaFinal);
   }
+
   @Patch(':id')
   async update(@Param('id') id: string, @Body() updateRefeicaoDto: UpdateRefeicaoDto) {
     return this.mealsService.update(id, updateRefeicaoDto);
   }
+
   @Patch(':id/status')
   async updateStatus(
     @Param('id') id: string,
-    @Body('concluida') concluida: boolean
+    @Body('concluida') concluida: boolean,
   ) {
     return this.mealsService.updateStatus(id, concluida);
   }

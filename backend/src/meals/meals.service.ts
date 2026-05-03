@@ -1,5 +1,4 @@
-import { Get, Injectable, Post, UseGuards } from '@nestjs/common';
-import { AuthGuard } from 'src/auth/auth.guard';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { CreateRefeicaoDto } from './dto/create-refeicao.dto';
 import { UpdateRefeicaoDto } from './dto/update-refeicao.dto';
@@ -8,11 +7,20 @@ import { UpdateRefeicaoDto } from './dto/update-refeicao.dto';
 export class MealsService {
   constructor(private prisma: PrismaService) { }
 
-  async findAllByDiet(dietaId: string) {
+  async findAllByDiet(dietaId: string, diaDaSemana?: number) {
+    const where: any = { dietaId };
+
+    // Se vier o dia da semana, filtra apenas refeições daquele dia
+    // OU refeições sem dia definido (aparecem sempre)
+    if (diaDaSemana !== undefined && diaDaSemana !== null) {
+      where.OR = [
+        { dia_da_semana: diaDaSemana },
+        { dia_da_semana: null },
+      ];
+    }
+
     return this.prisma.refeicoes.findMany({
-      where: {
-        dietaId: dietaId,
-      },
+      where,
       include: {
         alimentos_refeicoes: {
           include: {
@@ -27,25 +35,37 @@ export class MealsService {
   }
 
   async create(dto: CreateRefeicaoDto) {
-    return this.prisma.refeicoes.create({
-      data: {
-        nome: dto.nome,
-        dietaId: dto.dietaId,
-        created_at: new Date(),
-        horario: new Date(`1970-01-01T${dto.horario}Z`),
-        alimentos_refeicoes: {
-          create: dto.itens.map(item => ({
-            alimento_id: BigInt(item.alimentoId),
-            quantidade: item.quantidade
-          }))
-        }
-      },
-      include: {
-        alimentos_refeicoes: {
-          include: { alimentos: true }
-        }
-      }
-    });
+    const dias = dto.diasDaSemana && dto.diasDaSemana.length > 0
+      ? dto.diasDaSemana
+      : [null]; // null = sem dia específico (aparece todos os dias)
+
+    // Cria uma refeição clone para cada dia selecionado
+    const criadas = await Promise.all(
+      dias.map((dia) =>
+        this.prisma.refeicoes.create({
+          data: {
+            nome: dto.nome,
+            dietaId: dto.dietaId,
+            created_at: new Date(),
+            horario: new Date(`1970-01-01T${dto.horario}Z`),
+            dia_da_semana: dia,
+            alimentos_refeicoes: {
+              create: dto.itens.map(item => ({
+                alimento_id: BigInt(item.alimentoId),
+                quantidade: item.quantidade,
+              })),
+            },
+          },
+          include: {
+            alimentos_refeicoes: {
+              include: { alimentos: true },
+            },
+          },
+        })
+      )
+    );
+
+    return criadas;
   }
 
   async update(id: string, dto: UpdateRefeicaoDto) {
@@ -56,6 +76,7 @@ export class MealsService {
           nome: dto.nome,
           dietaId: dto.dietaId,
           horario: dto.horario ? new Date(`1970-01-01T${dto.horario}:00Z`) : undefined,
+          dia_da_semana: dto.diaDaSemana !== undefined ? dto.diaDaSemana : undefined,
         },
       });
 
@@ -86,9 +107,9 @@ export class MealsService {
       data: { concluida },
       include: {
         alimentos_refeicoes: {
-          include: { alimentos: true }
-        }
-      }
+          include: { alimentos: true },
+        },
+      },
     });
   }
 }
