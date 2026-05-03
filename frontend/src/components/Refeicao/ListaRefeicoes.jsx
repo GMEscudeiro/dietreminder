@@ -349,7 +349,9 @@ export function ListaRefeicoes({ onNovaRefeicao, onEditar, onNovaDieta, onEditar
     if (!dietaAtiva) return;
     setIsLoading(true);
     try {
-      const { data } = await api.get(`/meals?dietaId=${dietaAtiva.id}`);
+      // Passa o dia da semana atual para o backend filtrar (0=Dom, 1=Seg, ..., 6=Sáb)
+      const diaDaSemanaHoje = new Date().getDay();
+      const { data } = await api.get(`/meals?dietaId=${dietaAtiva.id}&diaDaSemana=${diaDaSemanaHoje}`);
       setRefeicoes(data);
     } catch (err) {
       console.error("Erro ao buscar refeições", err);

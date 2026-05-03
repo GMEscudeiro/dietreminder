@@ -1,10 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, Plus, Save, X, Clock, Type, List, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
+import { Search, Plus, Save, Clock, Type, List, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import api from '../../services/api';
 import { FoodList } from './FoodList';
 import { SyncManager } from '../../services/syncManager';
 
-// --- Sub-componentes de Formulário ---
+const DIAS_SEMANA = [
+  { id: 1, label: 'Seg' },
+  { id: 2, label: 'Ter' },
+  { id: 3, label: 'Qua' },
+  { id: 4, label: 'Qui' },
+  { id: 5, label: 'Sex' },
+  { id: 6, label: 'Sáb' },
+  { id: 0, label: 'Dom' },
+];
 
 function FormInput({ label, icon: Icon, error, containerClassName = '', ...props }) {
   return (
@@ -72,7 +80,59 @@ function FormSelect({ label, icon: Icon, options, error, containerClassName = ''
   );
 }
 
-// --- Componente Principal ---
+function DiasSemanaPicker({ diasSelecionados, onChange, error, modoEdicao }) {
+  const toggleDia = (diaId) => {
+    if (modoEdicao) {
+      onChange(diasSelecionados.includes(diaId) ? [] : [diaId]);
+    } else {
+      if (diasSelecionados.includes(diaId)) {
+        onChange(diasSelecionados.filter(d => d !== diaId));
+      } else {
+        onChange([...diasSelecionados, diaId]);
+      }
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className={`text-xs font-semibold ml-1 uppercase tracking-wider ${error ? 'text-red-500' : 'text-zinc-500 dark:text-zinc-400'}`}>
+        Dias da Semana
+      </label>
+      <div className="flex gap-1.5 flex-wrap">
+        {DIAS_SEMANA.map((dia) => {
+          const selecionado = diasSelecionados.includes(dia.id);
+          return (
+            <button
+              key={dia.id}
+              type="button"
+              onClick={() => toggleDia(dia.id)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all select-none
+                ${selecionado
+                  ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 border-zinc-900 dark:border-white'
+                  : 'bg-transparent text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400'
+                }`}
+            >
+              {dia.label}
+            </button>
+          );
+        })}
+      </div>
+      {diasSelecionados.length === 0 && (
+        <span className="text-[10px] text-zinc-400 ml-1">Nenhum dia = aparece todos os dias</span>
+      )}
+      {diasSelecionados.length > 0 && !modoEdicao && (
+        <span className="text-[10px] text-zinc-400 ml-1">
+          Será criada uma refeição para cada dia selecionado
+        </span>
+      )}
+      {error && (
+        <span className="text-[10px] font-medium text-red-500 ml-1 flex items-center gap-1 mt-0.5">
+          <AlertCircle size={10} /> {error}
+        </span>
+      )}
+    </div>
+  );
+}
 
 export function CadastroRefeicao({ onVoltar, refeicaoParaEditar }) {
   const [dietas, setDietas] = useState([]);
@@ -98,15 +158,19 @@ export function CadastroRefeicao({ onVoltar, refeicaoParaEditar }) {
     return refeicaoParaEditar.horario.substring(11, 16);
   });
   const [dietaSelecionada, setDietaSelecionada] = useState(refeicaoParaEditar?.dietaId || '');
+  const [diasSelecionados, setDiasSelecionados] = useState(() => {
+    if (refeicaoParaEditar?.dia_da_semana != null) {
+      return [refeicaoParaEditar.dia_da_semana];
+    }
+    return [];
+  });
 
   const [errosCampos, setErrosCampos] = useState({});
-
   const [termoBusca, setTermoBusca] = useState('');
   const [resultadosBusca, setResultadosBusca] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const searchContainerRef = useRef(null);
-
   const [isSaving, setIsSaving] = useState(false);
   const isEditing = !!refeicaoParaEditar;
 
@@ -177,54 +241,52 @@ export function CadastroRefeicao({ onVoltar, refeicaoParaEditar }) {
     setTermoBusca('');
   };
 
-  // Função para limpar o erro de um campo específico enquanto o usuário digita
   const limparErro = (campo) => {
     if (errosCampos[campo]) {
       setErrosCampos(prev => ({ ...prev, [campo]: null }));
     }
   };
 
-  // Função de Validação
   const validarFormulario = () => {
     const novosErros = {};
-
-    if (!nomeRefeicao.trim()) {
-      novosErros.nome = 'Dê um nome para a refeição.';
-    }
-
-    if (!dietaSelecionada) {
-      novosErros.dieta = 'Selecione uma dieta.';
-    }
-
-    if (!horarioRefeicao) {
-      novosErros.horario = 'Defina o horário.';
-    }
-
+    if (!nomeRefeicao.trim()) novosErros.nome = 'Dê um nome para a refeição.';
+    if (!dietaSelecionada) novosErros.dieta = 'Selecione uma dieta.';
+    if (!horarioRefeicao) novosErros.horario = 'Defina o horário.';
     setErrosCampos(novosErros);
     return Object.keys(novosErros).length === 0;
   };
 
   const handleSalvar = async () => {
     if (!validarFormulario()) return;
-
     setIsSaving(true);
 
-    const payload = {
-      nome: nomeRefeicao,
-      dietaId: dietaSelecionada,
-      horario: horarioRefeicao || null,
-      itens: alimentosAdicionados.map(item => ({
-        alimentoId: item.id,
-        quantidade: Number(item.quantidade)
-      }))
-    };
+    const itens = alimentosAdicionados.map(item => ({
+      alimentoId: item.id,
+      quantidade: Number(item.quantidade)
+    }));
 
     if (navigator.onLine) {
       try {
         if (isEditing) {
-          await api.patch(`/meals/${refeicaoParaEditar.id}`, payload);
+          // Edição: envia diaDaSemana (singular) para atualizar só esse registro
+          const editPayload = {
+            nome: nomeRefeicao,
+            dietaId: dietaSelecionada,
+            horario: horarioRefeicao || null,
+            diaDaSemana: diasSelecionados.length > 0 ? diasSelecionados[0] : null,
+            itens,
+          };
+          await api.patch(`/meals/${refeicaoParaEditar.id}`, editPayload);
         } else {
-          await api.post('/meals', payload);
+          // Criação: envia diasDaSemana (plural) — backend clona para cada dia
+          const createPayload = {
+            nome: nomeRefeicao,
+            dietaId: dietaSelecionada,
+            horario: horarioRefeicao || null,
+            diasDaSemana: diasSelecionados,
+            itens,
+          };
+          await api.post('/meals', createPayload);
         }
         onVoltar();
       } catch (err) {
@@ -235,13 +297,18 @@ export function CadastroRefeicao({ onVoltar, refeicaoParaEditar }) {
     } else {
       const metodo = isEditing ? 'patch' : 'post';
       const url = isEditing ? `/meals/${refeicaoParaEditar.id}` : '/meals';
-
-      SyncManager.adicionarNaFila(metodo, url, payload);
-
+      const offlinePayload = {
+        nome: nomeRefeicao,
+        dietaId: dietaSelecionada,
+        horario: horarioRefeicao || null,
+        diaDaSemana: diasSelecionados.length > 0 ? diasSelecionados[0] : null,
+        diasDaSemana: diasSelecionados,
+        itens,
+      };
+      SyncManager.adicionarNaFila(metodo, url, offlinePayload);
       alert(isEditing
         ? "Você está offline. A edição foi salva e será sincronizada em breve."
         : "Você está offline. A nova refeição foi salva localmente e aparecerá quando a internet voltar.");
-
       setIsSaving(false);
       onVoltar();
     }
@@ -303,6 +370,15 @@ export function CadastroRefeicao({ onVoltar, refeicaoParaEditar }) {
             options={dietas.map(d => ({ value: d.id, label: d.nome || d.nomeDieta }))}
             error={errosCampos.dieta}
           />
+
+          <div className="sm:col-span-2">
+            <DiasSemanaPicker
+              diasSelecionados={diasSelecionados}
+              onChange={setDiasSelecionados}
+              error={errosCampos.dias}
+              modoEdicao={isEditing}
+            />
+          </div>
         </div>
 
         <div className="flex flex-col gap-5 border-t border-zinc-100 dark:border-zinc-800/50 pt-6">
@@ -336,7 +412,6 @@ export function CadastroRefeicao({ onVoltar, refeicaoParaEditar }) {
                   const proteina = item.Prote_na__g_ ?? item.proteina ?? 0;
                   const gordura = item.Lip_deos__g_ ?? item.lipideos ?? 0;
                   const calorias = item.energia_kcal ?? item.calorias ?? 0;
-
                   return (
                     <button
                       key={item.id}
