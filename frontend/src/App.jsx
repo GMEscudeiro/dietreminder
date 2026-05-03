@@ -6,6 +6,7 @@ import { LoginForm } from './components/auth/LoginForm';
 import { RegisterForm } from './components/auth/RegisterForm';
 import { CadastroRefeicao } from './components/Refeicao/CadastroRefeicao';
 import { ListaRefeicoes } from './components/Refeicao/ListaRefeicoes';
+import { CadastroDieta } from './components/Dieta/CadastroDieta';
 import { SyncManager } from './services/syncManager';
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
   const { theme, toggleTheme } = useTheme();
   const [drawerAberto, setDrawerAberto] = useState(false);
   const [refeicaoSendoEditada, setRefeicaoSendoEditada] = useState(null);
+  const [dietaSendoEditada, setDietaSendoEditada] = useState(null);
 
   useEffect(() => {
     window.addEventListener('online', SyncManager.sincronizar);
@@ -44,8 +46,21 @@ function App() {
     setMode('cadastro_refeicao');
   };
 
+  const handleNovaDieta = () => {
+    setDietaSendoEditada(null);
+    setMode('cadastro_dieta');
+    setDrawerAberto(false);
+  };
+
+  const handleEditarDieta = (dieta) => {
+    setDietaSendoEditada(dieta);
+    setMode('cadastro_dieta');
+    setDrawerAberto(false);
+  };
+
   const handleVoltar = () => {
     setRefeicaoSendoEditada(null);
+    setDietaSendoEditada(null);
     setMode('lista_refeicoes');
   };
 
@@ -136,6 +151,8 @@ function App() {
               <ListaRefeicoes
                 onNovaRefeicao={handleNovaRefeicao}
                 onEditar={handleEditarRefeicao}
+                onNovaDieta={handleNovaDieta}
+                onEditarDieta={handleEditarDieta}
                 drawerAberto={drawerAberto}
                 onAbrirDrawer={() => setDrawerAberto(true)}
                 onFecharDrawer={() => setDrawerAberto(false)}
@@ -155,6 +172,22 @@ function App() {
               <CadastroRefeicao
                 onVoltar={handleVoltar}
                 refeicaoParaEditar={refeicaoSendoEditada}
+              />
+            </motion.div>
+          )}
+
+          {mode === 'cadastro_dieta' && (
+            <motion.div
+              key="cadastro_dieta"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              className="w-full max-w-xl"
+            >
+              <CadastroDieta
+                onVoltar={handleVoltar}
+                dietaParaEditar={dietaSendoEditada}
               />
             </motion.div>
           )}

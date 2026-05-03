@@ -59,7 +59,7 @@ export function RegisterForm({ onSwitchMode }) {
 
       onSwitchMode();
     } catch (err) {
-      const message = err.response?.data?.message || 'Erro ao criar conta. E-mail já em uso?';
+      const message = err.response?.data?.message || 'Erro ao criar conta.';
       setError(Array.isArray(message) ? message[0] : message);
     } finally {
       setIsLoading(false);
