@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   ChevronDown, UtensilsCrossed, Plus, Clock, Flame,
-  Beef, Wheat, Pencil, X, Check, AlertCircle, Loader2
+  Beef, Wheat, Pencil, X, Check, AlertCircle, Loader2, PieChart as PieChartIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api';
@@ -115,6 +115,13 @@ function DietaDrawer({ aberto, onFechar, dietaAtiva, dietas, onSelecionarDieta, 
                   </div>
                 );
               })}
+
+              <button
+                onClick={() => { onFechar(); onVerDashboard(); }}
+                className="w-full mt-2 flex items-center justify-center gap-2 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 hover:border-zinc-300 transition-all text-sm font-medium"
+              >
+                <PieChartIcon size={16} /> Ver Dashboard
+              </button>
 
               <button
                 onClick={onNovaDieta}
@@ -320,7 +327,7 @@ function RefeicaoCard({ refeicao, onEditar, onToggleConcluida }) {
 
 // ─── Componente Principal ─────────────────────────────────────────────────────
 
-export function ListaRefeicoes({ onNovaRefeicao, onEditar, onNovaDieta, onEditarDieta, drawerAberto, onAbrirDrawer, onFecharDrawer }) {
+export function ListaRefeicoes({ onNovaRefeicao, onEditar, onNovaDieta, onEditarDieta, drawerAberto, onAbrirDrawer, onFecharDrawer, onVerDashboard }) {
   const [dietas, setDietas] = useState([]);
   const [dietaAtiva, setDietaAtiva] = useState(null);
   const [refeicoes, setRefeicoes] = useState([]);
