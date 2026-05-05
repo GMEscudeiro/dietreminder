@@ -28,13 +28,16 @@ export class DietsService {
   }
 
   async create(userId: string, data: CreateDietDto) {
-    if (data.Ativa) {
+    const isAtiva = data.Ativa !== undefined ? data.Ativa : true;
+
+    if (isAtiva) {
       await this.desativarOutrasDietas(userId);
     }
 
     return this.prisma.dietas.create({
       data: {
         ...data,
+        Ativa: isAtiva,
         userId,
         created_at: new Date(),
       },

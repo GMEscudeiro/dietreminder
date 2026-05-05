@@ -10,12 +10,10 @@ export class MealsService {
   async findAllByDiet(dietaId: string, diaDaSemana?: number) {
     const where: any = { dietaId };
 
-    // Se vier o dia da semana, filtra apenas refeições daquele dia
-    // OU refeições sem dia definido (aparecem sempre)
     if (diaDaSemana !== undefined && diaDaSemana !== null) {
       where.OR = [
         { dia_da_semana: diaDaSemana },
-        { dia_da_semana: null },
+        { dia_da_semana: 0 },
       ];
     }
 
@@ -37,7 +35,7 @@ export class MealsService {
   async create(dto: CreateRefeicaoDto) {
     const dias = dto.diasDaSemana && dto.diasDaSemana.length > 0
       ? dto.diasDaSemana
-      : [null]; // null = sem dia específico (aparece todos os dias)
+      : [0]; // 0 = sem dia específico (aparece todos os dias)
 
     // Cria uma refeição clone para cada dia selecionado
     const criadas = await Promise.all(

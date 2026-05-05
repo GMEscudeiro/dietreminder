@@ -70,7 +70,7 @@ model refeicoes {
   created_at          DateTime              @db.Timestamp(6)
   horario             DateTime?             @db.Time(6)
   concluida           Boolean?              @default(false)
-  dia_da_semana       Decimal?              @db.Decimal
+  dia_da_semana       Decimal               @default(1) @db.Decimal
   alimentos_refeicoes alimentos_refeicoes[]
   dietas              dietas?               @relation(fields: [dietaId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Refeições_dietaId_fkey")
 }

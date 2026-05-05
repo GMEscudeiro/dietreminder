@@ -6,9 +6,11 @@ import { MealsModule } from './meals/meals.module';
 import { AuthModule } from './auth/auth.module';
 import { FoodsModule } from './foods/foods.module';
 import { DietsModule } from './diets/diets.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
-  imports: [UsersModule, MealsModule, AuthModule, FoodsModule, DietsModule],
+  imports: [ScheduleModule.forRoot(), UsersModule, MealsModule, AuthModule, FoodsModule, DietsModule, NotificationModule],
   controllers: [AppController],
   providers: [AppService],
 })
