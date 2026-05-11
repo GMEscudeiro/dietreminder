@@ -20,9 +20,9 @@ export class MealsController {
     if (!dietaId) {
       return [];
     }
-const dia = diaDaSemana !== undefined ? parseInt(diaDaSemana, 10) : undefined;
-const diaFinal = dia !== undefined && !isNaN(dia) ? dia : undefined;
-return this.mealsService.findAllByDiet(dietaId, diaFinal);
+    const dia = diaDaSemana !== undefined ? parseInt(diaDaSemana, 10) : undefined;
+    const diaFinal = dia !== undefined && !isNaN(dia) ? dia : undefined;
+    return this.mealsService.findAllByDiet(dietaId, diaFinal);
   }
 
   @Patch(':id')

@@ -8,6 +8,8 @@ import { CadastroRefeicao } from './components/Refeicao/CadastroRefeicao';
 import { ListaRefeicoes } from './components/Refeicao/ListaRefeicoes';
 import { CadastroDieta } from './components/Dieta/CadastroDieta';
 import { SyncManager } from './services/syncManager';
+import { io } from 'socket.io-client';
+import { Toast } from './components/Toast';
 
 function App() {
   const [mode, setMode] = useState(() => {
@@ -19,6 +21,7 @@ function App() {
   const [drawerAberto, setDrawerAberto] = useState(false);
   const [refeicaoSendoEditada, setRefeicaoSendoEditada] = useState(null);
   const [dietaSendoEditada, setDietaSendoEditada] = useState(null);
+  const [toastMessage, setToastMessage] = useState(null);
 
   useEffect(() => {
     window.addEventListener('online', SyncManager.sincronizar);
@@ -29,6 +32,33 @@ function App() {
 
     return () => window.removeEventListener('online', SyncManager.sincronizar);
   }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem('@DietReminder:token');
+    if (!token || mode === 'login' || mode === 'register') return;
+
+    let userId;
+    try {
+      const payloadBase64 = token.split('.')[1];
+      const decodedPayload = JSON.parse(atob(payloadBase64));
+      userId = decodedPayload.sub;
+    } catch (e) {
+      console.error('Error decoding token', e);
+      return;
+    }
+
+    const socket = io('http://localhost:3000', {
+      query: { userId }
+    });
+
+    socket.on('refeicao-alerta', (data) => {
+      setToastMessage(data.message);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [mode]);
 
   const handleLogout = () => {
     localStorage.removeItem('@DietReminder:token');
@@ -66,6 +96,7 @@ function App() {
 
   return (
     <div className="relative min-h-screen bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300 flex flex-col w-full selection:bg-zinc-900 selection:text-white dark:selection:bg-white dark:selection:text-zinc-900">
+      <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
       <header className="absolute top-0 w-full p-6 flex justify-between items-center z-20">
         <div className="w-10">
           {mode === 'lista_refeicoes' && (
