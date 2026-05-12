@@ -18,9 +18,12 @@
     "@nestjs/axios": "^4.0.1",
     "axios": "^1.14.0",
     "framer-motion": "^12.35.2",
+    "html-to-image": "^1.11.13",
+    "jspdf": "^4.2.1",
     "lucide-react": "^0.577.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "recharts": "^3.8.1",
     "socket.io-client": "^4.8.3"
   }
 }

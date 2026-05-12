@@ -58,6 +58,29 @@ export class DietsService {
     });
   }
 
+   async findActiveByUser(userId: string) {
+    return this.prisma.dietas.findFirst({
+      where: {
+        userId: userId,
+        Ativa: true,
+      },
+      include: {
+        refeicoes: {
+          include: {
+            alimentos_refeicoes: {
+              include: {
+                alimentos: true,
+              },
+            },
+          },
+          orderBy: {
+            horario: 'asc',
+          },
+        },
+      },
+    });
+  }
+
   private async desativarOutrasDietas(userId: string) {
     await this.prisma.dietas.updateMany({
       where: {
