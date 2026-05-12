@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, UseGuards, Request, Param, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, UseGuards, Request, Param, NotFoundException, ParseUUIDPipe } from '@nestjs/common';
 import { DietsService } from './diets.service';
 import { AuthGuard } from '../auth/auth.guard';
 import { CreateDietDto } from './dto/create-diet.dto';
@@ -14,8 +14,17 @@ export class DietsController {
     return this.dietsService.findAllByUser(req.user.sub);
   }
 
+  @Get('active')
+  async findActive(@Request() req) {
+    const dieta = await this.dietsService.findActiveByUser(req.user.sub);
+    if (!dieta) {
+      throw new NotFoundException('Nenhuma dieta ativa encontrada.');
+    }
+    return dieta;
+  }
+
   @Get(':id')
-  async findOne(@Param('id') id: string, @Request() req) {
+  async findOne(@Param('id', new ParseUUIDPipe()) id: string, @Request() req) {
     const dieta = await this.dietsService.findOne(id, req.user.sub);
     if (!dieta) {
       throw new NotFoundException('Dieta não encontrada.');
@@ -29,7 +38,7 @@ export class DietsController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Request() req, @Body() updateDietDto: UpdateDietDto) {
+  async update(@Param('id', new ParseUUIDPipe()) id: string, @Request() req, @Body() updateDietDto: UpdateDietDto) {
     return this.dietsService.update(id, req.user.sub, updateDietDto);
   }
 }
