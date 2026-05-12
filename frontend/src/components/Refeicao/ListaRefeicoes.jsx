@@ -441,7 +441,25 @@ export function ListaRefeicoes({ onNovaRefeicao, onEditar, onNovaDieta, onEditar
 
       <ConfirmacaoModal
         dietaAlvo={dietaPendente}
-        onConfirmar={() => { setDietaAtiva(dietaPendente); setDietaPendente(null); onFecharDrawer(); }}
+        onConfirmar={async () => {
+          try {
+            if (navigator.onLine) {
+              await api.patch(`/diets/${dietaPendente.id}`, { Ativa: true });
+            } else {
+              SyncManager.adicionarNaFila('patch', `/diets/${dietaPendente.id}`, { Ativa: true });
+            }
+            setDietaAtiva(dietaPendente);
+            setDietas(dietas.map(d => ({
+              ...d,
+              Ativa: d.id === dietaPendente.id
+            })));
+          } catch (err) {
+            console.error("Erro ao trocar dieta ativa", err);
+          } finally {
+            setDietaPendente(null);
+            onFecharDrawer();
+          }
+        }}
         onCancelar={() => setDietaPendente(null)}
       />
 
