@@ -330,7 +330,7 @@ export function Dashboard({ onVoltar }) {
             className="flex items-center gap-2 px-4 py-2 bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-900 rounded-full font-semibold text-sm transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Share2 size={16} />
-            {compartilhando ? 'Abrindo...' : 'Exportar'}
+            {compartilhando ? 'Abrindo...' : 'Compartilhar'}
           </button>
 
           <button
@@ -339,7 +339,7 @@ export function Dashboard({ onVoltar }) {
             className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-semibold text-sm transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ImageDown size={16} />
-            {salvando ? 'Salvando...' : 'Salvar PDF'}
+            {salvando ? 'Salvando...' : 'Exportar PDF'}
           </button>
 
           <div className="hidden sm:block p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
